@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: wgp-whatsapp-gateway
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /status
+    envVars:
+      - key: WGP_API_KEY
+        generateValue: true        # Render gera uma key aleatória automaticamente
+      - key: NODE_ENV
+        value: production
+      - key: WGP_WEBHOOK_URL
+        value: ""                  # Preencher com sua URL de webhook se desejar

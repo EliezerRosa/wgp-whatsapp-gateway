@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WGP WhatsApp Gateway</title>
+<style>
+  :root{--green:#25D366;--bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;
+        --border:#2a2a2a;--text:#fff;--muted:#888;--err:#e74c3c;--warn:#f39c12}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);
+       min-height:100vh;font-size:14px}
+  header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;
+         display:flex;align-items:center;gap:12px}
+  .logo{width:32px;height:32px;border-radius:8px;background:var(--green);
+        display:flex;align-items:center;justify-content:center;font-size:16px}
+  .hdr-title{font-size:15px;font-weight:600}
+  .hdr-sub{font-size:11px;color:var(--muted)}
+  .badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;margin-left:auto}
+  .b-ok{background:#1a4d2e;color:#4ade80}
+  .b-qr{background:#4d3a1a;color:#fbbf24}
+  .b-dis{background:#4d1a1a;color:#f87171}
+  .b-con{background:#1a334d;color:#60a5fa}
+  main{max-width:1100px;margin:0 auto;padding:24px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+  .stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .stat-label{font-size:11px;color:var(--muted);margin-bottom:4px}
+  .stat-value{font-size:20px;font-weight:600}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+  .panel-title{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;
+               align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .row{display:flex;gap:10px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  input,select,textarea{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+    padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--green)}
+  textarea{resize:vertical;min-height:80px;width:100%;font-family:monospace;font-size:12px}
+  .inp-full{width:100%}
+  .inp-lg{min-width:200px;flex:1}
+  button{padding:8px 18px;border:none;border-radius:8px;cursor:pointer;font-size:13px;
+         font-weight:500;transition:all .15s}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-green:hover{background:#1ebe5a}
+  .btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{border-color:var(--green)}
+  .btn-red{background:#c0392b;color:#fff}
+  .btn-sm{padding:5px 12px;font-size:12px}
+  pre.out{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+          padding:12px;font-size:11px;line-height:1.6;overflow:auto;
+          max-height:280px;font-family:monospace;white-space:pre-wrap;word-break:break-all}
+  .tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+  .ttab{padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;
+        background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+  .ttab.on{background:#1a3d2e;color:#4ade80;border-color:var(--green)}
+  .pane{display:none}.pane.on{display:block}
+  .msg-item{border-bottom:1px solid var(--border);padding:10px 0;display:flex;flex-direction:column;gap:3px}
+  .msg-from{font-size:12px;color:var(--green);font-weight:500}
+  .msg-text{font-size:13px;color:var(--text)}
+  .msg-meta{font-size:10px;color:var(--muted)}
+  .chip{font-size:10px;padding:1px 7px;border-radius:12px;font-weight:500}
+  .c-ind{background:#1a3d2e;color:#4ade80}
+  .c-grp{background:#1a2e4d;color:#60a5fa}
+  .c-img{background:#3d1a2e;color:#f472b6}
+  code{font-family:monospace;font-size:11px;background:var(--bg3);
+       padding:1px 5px;border-radius:4px;color:var(--green)}
+  .qr-container{display:flex;flex-direction:column;align-items:center;gap:12px}
+  #qr-img{width:220px;height:220px;border-radius:10px;background:#fff;padding:8px}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px}
+  .alert{border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:12px}
+  .alert-warn{background:#332a14;border:1px solid var(--warn);color:var(--warn)}
+  .alert-ok{background:#142a1f;border:1px solid var(--green);color:#4ade80}
+  .k{color:#6ab0e0}.s{color:#6db87e}.n{color:#e06c75}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">💬</div>
+  <div>
+    <div class="hdr-title">WGP WhatsApp Gateway</div>
+    <div class="hdr-sub">v1.0 · JSON I/O · Self-contained</div>
+  </div>
+  <span id="status-badge" class="badge b-con">carregando...</span>
+</header>
+
+<main>
+  <!-- Stats -->
+  <div class="grid" id="stats-grid">
+    <div class="stat"><div class="stat-label">Status</div><div class="stat-value" id="st-status">—</div></div>
+    <div class="stat"><div class="stat-label">Número conectado</div><div class="stat-value" id="st-phone">—</div></div>
+    <div class="stat"><div class="stat-label">Msgs recebidas</div><div class="stat-value" id="st-msgs">0</div></div>
+    <div class="stat"><div class="stat-label">Uptime</div><div class="stat-value" id="st-uptime">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="ttab on"  onclick="tab('send')">📤 Enviar</div>
+    <div class="ttab"     onclick="tab('receive')">📥 Recebidas</div>
+    <div class="ttab"     onclick="tab('group')">👥 Grupos</div>
+    <div class="ttab"     onclick="tab('broadcast')">📢 Broadcast</div>
+    <div class="ttab"     onclick="tab('api')">⚡ API Direta</div>
+    <div class="ttab"     onclick="tab('connect')">📱 Conexão</div>
+  </div>
+
+  <!-- ENVIAR -->
+  <div id="pane-send" class="pane on panel">
+    <div class="panel-title">📤 Enviar mensagem</div>
+    <div class="row">
+      <div class="inp-lg">
+        <label>Destinatário (número com DDI+DDD ou group_id)</label>
+        <input type="text" id="s-to" placeholder="5511999998888 ou 120363...@g.us" class="inp-full">
+      </div>
+      <div>
+        <label>Canal</label>
+        <select id="s-channel">
+          <option value="individual">Individual</option>
+          <option value="group">Grupo</option>
+        </select>
+      </div>
+      <div>
+        <label>Tipo</label>
+        <select id="s-type" onchange="toggleMediaFields()">
+          <option value="text">Texto</option>
+          <option value="image">Imagem (URL)</option>
+          <option value="video">Vídeo (URL)</option>
+          <option value="audio">Áudio (URL)</option>
+          <option value="document">Documento (URL)</option>
+        </select>
+      </div>
+    </div>
+    <div id="f-text">
+      <label>Mensagem</label>
+      <textarea id="s-text" placeholder="Digite a mensagem..."></textarea>
+    </div>
+    <div id="f-media" style="display:none">
+      <div class="row">
+        <div class="inp-lg"><label>URL da mídia</label><input type="url" id="s-url" placeholder="https://..." class="inp-full"></div>
+        <div class="inp-lg"><label>Legenda (opcional)</label><input type="text" id="s-caption" class="inp-full"></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn-green" onclick="sendMsg()">▶ Enviar</button>
+      <button class="btn-ghost btn-sm" onclick="clearOut('s-out')">Limpar</button>
+    </div>
+    <pre class="out" id="s-out" style="margin-top:12px">// Output aqui...</pre>
+  </div>
+
+  <!-- RECEBIDAS -->
+  <div id="pane-receive" class="pane panel">
+    <div class="panel-title">📥 Mensagens recebidas <button class="btn-ghost btn-sm" style="margin-left:auto" onclick="loadMsgs()">↻ Atualizar</button></div>
+    <div id="webhook-row" style="margin-bottom:14px">
+      <label>URL de Webhook (receber eventos em tempo real)</label>
+      <div class="row">
+        <input type="url" id="wh-url" placeholder="https://seu-backend.com/webhook" class="inp-lg">
+        <button class="btn-green btn-sm" onclick="saveWebhook()">Salvar</button>
+        <span id="wh-status" style="font-size:11px;color:var(--muted);align-self:center"></span>
+      </div>
+    </div>
+    <div id="msgs-list"><div class="empty">Nenhuma mensagem ainda. Aguardando...</div></div>
+  </div>
+
+  <!-- GRUPOS -->
+  <div id="pane-group" class="pane panel">
+    <div class="panel-title">👥 Criar grupo</div>
+    <div class="row">
+      <div class="inp-lg"><label>Nome do grupo</label><input type="text" id="g-name" placeholder="Equipe Vendas" class="inp-full"></div>
+    </div>
+    <div><label>Membros (um número por linha, com DDI+DDD)</label>
+      <textarea id="g-members" placeholder="5511999990001&#10;5511999990002&#10;5511999990003"></textarea></div>
+    <div style="margin-top:8px"><label>Descrição (opcional)</label>
+      <input type="text" id="g-desc" placeholder="Canal oficial da equipe" class="inp-full"></div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn-green" onclick="createGroup()">✚ Criar grupo</button>
+    </div>
+    <pre class="out" id="g-out" style="margin-top:12px">// Output aqui...</pre>
+  </div>
+
+  <!-- BROADCAST -->
+  <div id="pane-broadcast" class="pane panel">
+    <div class="panel-title">📢 Broadcast</div>
+    <div class="alert alert-warn">⚠️ Use delays entre mensagens (mín. 2s) para evitar banimento. Não faça spam.</div>
+    <div><label>Mensagem</label>
+      <textarea id="b-text" placeholder="Olá {{nome}}, confira nossa promoção!"></textarea></div>
+    <div style="margin-top:8px"><label>Destinatários (um número por linha)</label>
+      <textarea id="b-recip" placeholder="5511999990001&#10;5511999990002&#10;5511999990003" style="min-height:100px"></textarea></div>
+    <div class="row" style="margin-top:8px">
+      <div><label>Delay entre envios (ms)</label>
+        <input type="number" id="b-delay" value="2500" min="1000" max="10000" style="width:120px"></div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn-green" onclick="doBroadcast()">▶ Enviar broadcast</button>
+    </div>
+    <pre class="out" id="b-out" style="margin-top:12px">// Output aqui...</pre>
+  </div>
+
+  <!-- API DIRETA -->
+  <div id="pane-api" class="pane panel">
+    <div class="panel-title">⚡ API Direta — POST /wgp</div>
+    <div style="margin-bottom:8px">
+      <label>JSON de input (formato WGP)</label>
+      <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+        <button class="btn-ghost btn-sm" onclick="loadExample('text')">Texto</button>
+        <button class="btn-ghost btn-sm" onclick="loadExample('media')">Mídia</button>
+        <button class="btn-ghost btn-sm" onclick="loadExample('group')">Criar grupo</button>
+        <button class="btn-ghost btn-sm" onclick="loadExample('broadcast')">Broadcast</button>
+        <button class="btn-ghost btn-sm" onclick="loadExample('status')">Status</button>
+      </div>
+      <textarea id="api-in" style="min-height:160px;font-size:11px"></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-green" onclick="callWGP()">▶ Executar</button>
+      <button class="btn-ghost btn-sm" onclick="clearOut('api-out')">Limpar</button>
+    </div>
+    <pre class="out" id="api-out" style="margin-top:12px">// Output aqui...</pre>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sua API Key (para apps externos):</div>
+      <code id="api-key-display">Carregando...</code>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">
+        Header: <code>apikey: SUA_KEY</code> · Endpoint: <code>POST /wgp</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONEXÃO -->
+  <div id="pane-connect" class="pane panel">
+    <div class="panel-title">📱 Conexão WhatsApp</div>
+    <div id="conn-content"><div class="empty">Carregando...</div></div>
+  </div>
+</main>
+
+<script>
+const KEY = document.cookie.match(/wgpkey=([^;]+)/)?.[1] || 
+            localStorage.getItem('wgpkey') || 
+            (()=>{const k=prompt('Digite a API Key:','wgp-secret-key');localStorage.setItem('wgpkey',k);return k})()
+
+const h = { 'Content-Type':'application/json', 'apikey': KEY }
+
+async function api(method, path, body) {
+  try {
+    const r = await fetch(path, { method, headers: h, body: body?JSON.stringify(body):undefined })
+    return await r.json()
+  } catch(e) { return { status:'error', error:{ message: e.message } } }
+}
+
+function fmt(obj) {
+  const j = JSON.stringify(obj, null, 2)
+  return j.replace(/"([^"]+)"(?=\s*:)/g,'<span class=k>"$1"</span>')
+          .replace(/:\s*"([^"]*?)"/g,': <span class=s>"$1"</span>')
+          .replace(/:\s*(\d+\.?\d*)/g,': <span class=n>$1</span>')
+}
+
+function setOut(id, data) {
+  const el = document.getElementById(id)
+  el.innerHTML = fmt(data)
+}
+
+function clearOut(id) {
+  document.getElementById(id).textContent = '// Output aqui...'
+}
+
+// ── Status polling ───────────────────────────────────────────────
+async function updateStatus() {
+  const s = await fetch('/status').then(r=>r.json()).catch(()=>null)
+  if (!s) return
+  const bd = document.getElementById('status-badge')
+  const icons = { connected:'✅ Conectado', qr_ready:'📱 Escanear QR', 
+                  connecting:'🔄 Conectando', disconnected:'❌ Desconectado', logged_out:'🚪 Deslogado' }
+  const cls   = { connected:'b-ok', qr_ready:'b-qr', connecting:'b-con', 
+                  disconnected:'b-dis', logged_out:'b-dis' }
+  bd.textContent  = icons[s.status] || s.status
+  bd.className    = 'badge ' + (cls[s.status] || 'b-dis')
+  document.getElementById('st-status').textContent  = s.status
+  document.getElementById('st-phone').textContent   = s.phone ? '+'+s.phone : '—'
+  document.getElementById('st-uptime').textContent  = fmtUptime(s.uptime_sec)
+  document.getElementById('api-key-display').textContent = KEY
+
+  // Painel de conexão
+  const cc = document.getElementById('conn-content')
+  if (s.status === 'connected') {
+    cc.innerHTML = `<div class="alert alert-ok">✅ WhatsApp conectado como <strong>${s.name}</strong> (+${s.phone})</div>
+      <p style="font-size:12px;color:var(--muted)">Para desconectar, faça logout no WhatsApp do celular em Aparelhos conectados.</p>`
+  } else if (s.status === 'qr_ready') {
+    const qd = await fetch('/qr?json=1').then(r=>r.json()).catch(()=>null)
+    cc.innerHTML = `<div class="qr-container">
+      <p style="font-size:13px">Escaneie o QR Code no WhatsApp → Configurações → Aparelhos conectados</p>
+      <img id="qr-img" src="${qd?.qr||''}" alt="QR Code">
+      <button class="btn-ghost btn-sm" onclick="updateStatus()">↻ Novo QR</button>
+    </div>`
+  } else {
+    cc.innerHTML = `<div style="text-align:center;padding:20px">
+      <div style="font-size:32px;margin-bottom:8px">🔄</div>
+      <p>Status: <code>${s.status}</code><br>
+      <span style="font-size:12px;color:var(--muted)">Aguardando conexão... A página atualiza automaticamente.</span></p>
+    </div>`
+  }
+}
+
+function fmtUptime(s) {
+  if (!s) return '—'
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60
+  return `${h}h ${m}m ${ss}s`
+}
+
+setInterval(updateStatus, 8000)
+updateStatus()
+
+// ── Mensagens recebidas ──────────────────────────────────────────
+async function loadMsgs() {
+  const d = await api('GET', '/messages?limit=50')
+  document.getElementById('st-msgs').textContent = d.count || 0
+  const el = document.getElementById('msgs-list')
+  if (!d.messages?.length) { el.innerHTML = '<div class="empty">Nenhuma mensagem ainda.</div>'; return }
+  el.innerHTML = d.messages.map(m => `
+    <div class="msg-item">
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="msg-from">${m.from?.split('@')[0] || '?'}</span>
+        <span class="chip ${m.channel==='group'?'c-grp':'c-ind'}">${m.channel}</span>
+        <span class="chip c-img">${m.type}</span>
+        ${m.context?.group_id?`<span style="font-size:10px;color:var(--muted)">grupo: ${m.context.group_id.split('@')[0]}</span>`:''}
+      </div>
+      <div class="msg-text">${m.payload?.text || m.payload?.caption || `[${m.type}]`}</div>
+      <div class="msg-meta">${m.timestamp} · id: ${m.message_id}</div>
+    </div>`).join('')
+}
+
+// ── Enviar mensagem ──────────────────────────────────────────────
+function toggleMediaFields() {
+  const t = document.getElementById('s-type').value
+  document.getElementById('f-text').style.display  = t==='text' ? '' : 'none'
+  document.getElementById('f-media').style.display = t!=='text' ? '' : 'none'
+}
+
+async function sendMsg() {
+  const to      = document.getElementById('s-to').value.trim()
+  const channel = document.getElementById('s-channel').value
+  const type    = document.getElementById('s-type').value
+  if (!to) return alert('Informe o destinatário')
+
+  let body
+  if (type === 'text') {
+    const text = document.getElementById('s-text').value
+    if (!text) return alert('Informe a mensagem')
+    body = { action:'send_message', channel, to, payload:{ text } }
+  } else {
+    const url     = document.getElementById('s-url').value.trim()
+    const caption = document.getElementById('s-caption').value
+    if (!url) return alert('Informe a URL da mídia')
+    body = { action:'send_media', channel, to, payload:{ media_type:type, url, caption } }
+  }
+  const out = await api('POST', '/wgp', body)
+  setOut('s-out', out)
+}
+
+// ── Criar grupo ──────────────────────────────────────────────────
+async function createGroup() {
+  const name    = document.getElementById('g-name').value.trim()
+  const members = document.getElementById('g-members').value.trim().split('\n').map(s=>s.trim()).filter(Boolean)
+  const desc    = document.getElementById('g-desc').value.trim()
+  if (!name) return alert('Informe o nome do grupo')
+  if (!members.length) return alert('Informe ao menos 1 membro')
+  const out = await api('POST', '/wgp', { action:'create_group', channel:'group', payload:{ name, members, description:desc } })
+  setOut('g-out', out)
+}
+
+// ── Broadcast ────────────────────────────────────────────────────
+async function doBroadcast() {
+  const text       = document.getElementById('b-text').value.trim()
+  const recipients = document.getElementById('b-recip').value.trim().split('\n').map(s=>s.trim()).filter(Boolean)
+  const delay_ms   = parseInt(document.getElementById('b-delay').value) || 2500
+  if (!text) return alert('Informe a mensagem')
+  if (!recipients.length) return alert('Informe os destinatários')
+  document.getElementById('b-out').textContent = `// Enviando para ${recipients.length} destinatários...`
+  const out = await api('POST', '/wgp', { action:'broadcast_send', channel:'broadcast', payload:{ text, recipients, delay_ms } })
+  setOut('b-out', out)
+}
+
+// ── Webhook ──────────────────────────────────────────────────────
+async function saveWebhook() {
+  const url = document.getElementById('wh-url').value.trim()
+  if (!url) return alert('Informe a URL')
+  const out = await api('POST', '/webhook', { url })
+  document.getElementById('wh-status').textContent = out.status === 'success' ? '✅ Salvo' : '❌ Erro'
+}
+
+async function loadWebhook() {
+  const d = await api('GET', '/webhook')
+  if (d.webhook_url) document.getElementById('wh-url').value = d.webhook_url
+}
+loadWebhook()
+
+// ── API direta — exemplos ────────────────────────────────────────
+const examples = {
+  text: { action:'send_message', channel:'individual', to:'5511999998888', payload:{ text:'Olá! Mensagem via WGP 🚀' } },
+  media: { action:'send_media', channel:'individual', to:'5511999998888', payload:{ media_type:'image', url:'https://via.placeholder.com/400', caption:'Imagem de teste' } },
+  group: { action:'create_group', channel:'group', payload:{ name:'Equipe WGP', members:['5511999990001','5511999990002'], description:'Grupo criado via WGP' } },
+  broadcast: { action:'broadcast_send', channel:'broadcast', payload:{ text:'Olá! Novidades da semana 📣', recipients:['5511999990001','5511999990002'], delay_ms:2500 } },
+  status: { action:'get_status' },
+}
+
+function loadExample(k) {
+  document.getElementById('api-in').value = JSON.stringify(examples[k], null, 2)
+}
+loadExample('text')
+
+async function callWGP() {
+  let body
+  try { body = JSON.parse(document.getElementById('api-in').value) }
+  catch(e) { alert('JSON inválido: '+e.message); return }
+  const out = await api('POST', '/wgp', body)
+  setOut('api-out', out)
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────
+function tab(id) {
+  document.querySelectorAll('.ttab').forEach((t,i)=>{
+    const ids=['send','receive','group','broadcast','api','connect']
+    t.classList.toggle('on', ids[i]===id)
+  })
+  document.querySelectorAll('.pane').forEach(p => {
+    p.classList.toggle('on', p.id==='pane-'+id)
+  })
+  if (id === 'receive') loadMsgs()
+}
+</script>
+</body>
+</html>
